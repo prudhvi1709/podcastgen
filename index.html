@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Podcast Generator</title>
+    <link rel="icon" href="https://raw.githubusercontent.com/gramener/assets/main/straive-favicon.svg">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        .narrative {
+            max-width: 40rem;
+        }
+        .card {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary" data-bs-theme="dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href=".">Podcast Generator</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <div class="nav-item dropdown ms-auto" role="group" aria-label="Toggle dark mode" title="Toggle Dark Mode">
+                    <button class="dark-theme-toggle btn btn-outline-light dropdown-toggle" type="button"
+                        data-bs-toggle="dropdown" aria-expanded="false" aria-label="Toggle theme (auto)">
+                        <i class="bi bi-circle-half"></i> <span class="d-lg-none ms-2">Toggle theme</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><button class="dropdown-item" data-bs-theme-value="light"><i class="me-2 bi bi-sun-fill"></i>Light</button></li>
+                        <li><button class="dropdown-item" data-bs-theme-value="dark"><i class="me-2 bi bi-moon-stars-fill"></i>Dark</button></li>
+                        <li><button class="dropdown-item" data-bs-theme-value="auto"><i class="bi bi-circle-half"></i>Auto</button></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h1 class="display-1 my-4 text-center">Podcast Generator</h1>
+        <h2 class="display-6 text-center mb-4">Transform your messages into engaging podcasts</h2>
+        
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="messagesFile" class="form-label">Upload Messages JSON</label>
+                            <input class="form-control" type="file" id="messagesFile" accept=".json">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="weekSelect" class="form-label">Select Week</label>
+                            <select class="form-select" id="weekSelect" disabled>
+                                <option value="">Select a week after uploading messages</option>
+                            </select>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button id="generateScript" class="btn btn-primary" disabled>
+                                <i class="bi bi-file-text me-2"></i>Generate Script
+                            </button>
+                            <button id="generateAudio" class="btn btn-success" disabled>
+                                <i class="bi bi-music-note-beamed me-2"></i>Generate Audio
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-chat-dots me-2"></i>Messages</span>
+                        <span id="messageCount" class="badge bg-primary">0</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="messagesContent" class="overflow-auto" style="max-height: 400px; white-space: pre-wrap;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-file-earmark-text me-2"></i>Podcast Script
+                    </div>
+                    <div class="card-body">
+                        <textarea id="scriptContent" class="form-control" rows="15" readonly></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4" id="audioContainer" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-headphones me-2"></i>Generated Podcast
+                </div>
+                <div class="card-body">
+                    <audio id="podcastAudio" controls class="w-100"></audio>
+                    <a id="downloadLink" class="btn btn-outline-primary mt-2" download="podcast.mp3">
+                        <i class="bi bi-download me-2"></i>Download Podcast
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-3 text-center">
+            <small class="text-muted">
+                <i class="bi bi-info-circle me-1"></i>
+                This application uses the LLM Foundry API. You must be logged in to use text and audio generation features.
+            </small>
+        </div>
+    </div>
+
+    <footer class="my-5 vh-100 d-flex align-items-center justify-content-center">
+        <h1 class="display-4">Designed by <a href="https://gramener.com/" class="text-reset link-offset-3 link-underline link-underline-opacity-25">Gramener</a></h1>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@gramex/ui@0.3/dist/dark-theme.js" type="module"></script>
+    <script src="script.js" type="module"></script>
+</body>
+</html>
