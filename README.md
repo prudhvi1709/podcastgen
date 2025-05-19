@@ -21,10 +21,16 @@ A sophisticated web application that transforms various document formats into en
   - Professional podcast format with host interactions
   - Automatic topic segmentation and transitions
   - Support for multiple speakers and narrative styles
+  - Customizable podcast format template
+  - Week-specific or all-weeks content processing
 
 - **High-Quality Audio Generation**
   - Text-to-speech conversion using LLM Foundry's GPT-4o-mini-tts model
-  - Multiple voice support for different speakers
+  - Multiple voice support with customizable characteristics:
+    - ash: Default voice for Host 1
+    - nova: Default voice for Host 2
+    - alloy, echo, fable, onyx, shimmer: Additional voice options
+  - Custom voice instructions per speaker
   - Professional audio processing and mixing
   - WAV format output with high-quality encoding
   - Fallback audio generation for offline use
@@ -35,6 +41,9 @@ A sophisticated web application that transforms various document formats into en
   - Real-time progress indicators
   - Interactive content visualization
   - Downloadable podcast files
+  - Voice configuration interface
+  - Week selection and filtering
+  - Custom voice instruction editor
 
 ## 🚀 Getting Started
 
@@ -42,8 +51,9 @@ A sophisticated web application that transforms various document formats into en
 2. Open `index.html` in a modern web browser
 3. Upload your document (JSON, PDF, DOCX, or TXT)
 4. Add optional context information
-5. Select the desired week or all weeks
-6. Generate and download your podcast
+5. Configure voice settings for hosts
+6. Select the desired week or all weeks
+7. Generate and download your podcast
 
 ## 📋 Supported File Formats
 
@@ -97,14 +107,12 @@ A sophisticated web application that transforms various document formats into en
 - Batch processing for large files
 - Fallback tone generation
 
-## ⚠️ Current Limitations
-
-- Fixed podcast template structure
-- WAV-only audio format support
-- No cost tracking for API usage
-- No intermediate file saving
-- No configuration file support
-- No ID3 tag support
+### Voice Configuration
+- TOML-based configuration file
+- Custom voice instructions per speaker
+- Multiple voice options
+- Real-time voice preview
+- Voice characteristic customization
 
 ## 🔒 Security
 
@@ -119,10 +127,10 @@ A sophisticated web application that transforms various document formats into en
 - Multiple audio format support
 - API usage tracking
 - Intermediate file saving
-- Configuration file support
 - ID3 tag support
-- Custom voice selection
 - Background music support
+- Voice preview functionality
+- Batch processing improvements
 
 ## 👥 Contributing
 
