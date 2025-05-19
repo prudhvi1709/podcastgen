@@ -42,22 +42,55 @@
 
     <div class="container mt-4">
         <h1 class="display-1 my-4 text-center">Podcast Generator</h1>
-        <h2 class="display-6 text-center mb-4">Transform your messages into engaging podcasts</h2>
+        <h2 class="display-6 text-center mb-4">Transform your documents into engaging podcasts</h2>
         
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="card mb-4">
                     <div class="card-body">
                         <div class="mb-3">
-                            <label for="messagesFile" class="form-label">Upload Messages JSON</label>
-                            <input class="form-control" type="file" id="messagesFile" accept=".json">
+                            <label for="messagesFile" class="form-label">Upload Document</label>
+                            <input class="form-control" type="file" id="messagesFile" accept=".json,.pdf,.docx,.txt">
+                            <div class="form-text">Supported formats: JSON, PDF, DOCX, TXT</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="userContext" class="form-label">Additional Context (optional)</label>
+                            <textarea class="form-control" id="userContext" rows="3" placeholder="Add any additional context or details about the content..."></textarea>
                         </div>
 
                         <div class="mb-3">
                             <label for="weekSelect" class="form-label">Select Week</label>
                             <select class="form-select" id="weekSelect" disabled>
-                                <option value="">Select a week after uploading messages</option>
+                                <option value="">Select a week after uploading content</option>
                             </select>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="alexVoiceSelect" class="form-label">Alex's Voice</label>
+                                <select class="form-select" id="alexVoiceSelect">
+                                    <!-- Will be populated dynamically -->
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="mayaVoiceSelect" class="form-label">Maya's Voice</label>
+                                <select class="form-select" id="mayaVoiceSelect">
+                                    <!-- Will be populated dynamically -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="activeVoiceLabel" class="form-label">Edit Voice Instructions</label>
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-outline-primary active" id="editAlexBtn">Host 1</button>
+                                    <button type="button" class="btn btn-outline-primary" id="editMayaBtn">Host 2</button>
+                                </div>
+                                <span class="ms-2" id="activeVoiceLabel">Editing: Host 1</span>
+                            </div>
+                            <textarea class="form-control" id="voiceInstructions" rows="3"></textarea>
                         </div>
 
                         <div class="d-grid gap-2">
@@ -77,7 +110,7 @@
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <span><i class="bi bi-chat-dots me-2"></i>Messages</span>
+                        <span><i class="bi bi-chat-dots me-2"></i>Content</span>
                         <span id="messageCount" class="badge bg-primary">0</span>
                     </div>
                     <div class="card-body">

@@ -1,19 +1,23 @@
 # Browser Podcast Generator
 
-A sophisticated web application that transforms conversation threads into engaging podcasts directly in your browser. Built with modern web technologies and powered by LLM Foundry's AI capabilities.
+A sophisticated web application that transforms various document formats into engaging podcasts directly in your browser. Built with modern web technologies and powered by LLM Foundry's AI capabilities.
 
 ## 🌟 Features
 
-- **Message Processing**
-  - Load and parse JSON message data from any conversation
-  - Intelligent message threading and organization
-  - Week-based message filtering and grouping
-  - Dynamic message rendering with batch processing
-  - Support for message reactions and quoted replies
+- **Document Processing**
+  - Support for multiple file formats:
+    - JSON: Structured conversation data
+    - PDF: Document text extraction
+    - DOCX: Word document processing
+    - TXT: Plain text content
+  - User-provided context input
+  - Intelligent content threading and organization
+  - Week-based content filtering and grouping
+  - Dynamic content rendering with batch processing
 
 - **AI-Powered Script Generation**
   - Intelligent script creation using LLM Foundry's GPT-4o-mini model
-  - Contextual understanding of conversation threads
+  - Contextual understanding of document content
   - Professional podcast format with host interactions
   - Automatic topic segmentation and transitions
   - Support for multiple speakers and narrative styles
@@ -29,19 +33,21 @@ A sophisticated web application that transforms conversation threads into engagi
   - Clean, responsive Bootstrap-based design
   - Dark/light theme support
   - Real-time progress indicators
-  - Interactive message thread visualization
+  - Interactive content visualization
   - Downloadable podcast files
 
 ## 🚀 Getting Started
 
 1. Clone the repository
 2. Open `index.html` in a modern web browser
-3. Upload your conversation JSON file
-4. Select the desired week or all weeks
-5. Generate and download your podcast
+3. Upload your document (JSON, PDF, DOCX, or TXT)
+4. Add optional context information
+5. Select the desired week or all weeks
+6. Generate and download your podcast
 
-## 📋 Message JSON Format
+## 📋 Supported File Formats
 
+### JSON Format
 ```json
 [
   {
@@ -62,6 +68,11 @@ A sophisticated web application that transforms conversation threads into engagi
   }
 ]
 ```
+
+### Other Formats
+- **PDF**: Text extracted from PDF documents
+- **DOCX**: Content from Word documents
+- **TXT**: Plain text files with paragraphs separated by blank lines
 
 ## 🔧 Technical Implementation
 
