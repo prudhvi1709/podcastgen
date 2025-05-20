@@ -277,6 +277,12 @@ function processContent(content) {
         renderMessagesInBatches(roots, replies);
         elements.generateScript.disabled = false;
     }
+    
+    // Show messages content card - remove d-none class
+    const messagesCard = elements.messagesContent.closest('.card');
+    if (messagesCard) {
+        messagesCard.classList.remove('d-none');
+    }
 }
 
 // Build threads from messages - simplified
@@ -415,6 +421,12 @@ async function generatePodcastScript() {
         try {
             // Use asyncLLM to stream the response
             elements.scriptContent.value = ''; // Clear the textarea first
+            
+            // Show script content card - remove d-none class
+            const scriptCard = elements.scriptContent.closest('.card');
+            if (scriptCard) {
+                scriptCard.classList.remove('d-none');
+            }
             
             for await (const { content } of asyncLLM(
                 "https://llmfoundry.straive.com/openai/v1/chat/completions", 
