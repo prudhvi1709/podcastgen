@@ -1,3 +1,5 @@
+import { asyncLLM } from "https://cdn.jsdelivr.net/npm/asyncllm@2";
+
 // Library URLs
 const LIBRARIES = {
     PDF_JS: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js',
@@ -7,19 +9,18 @@ const LIBRARIES = {
 
 // Voice config and data structures
 const VOICE_CONFIG = {ash:'',nova:'',alloy:'',echo:'',fable:'',onyx:'',shimmer:''};
-let PODCAST_FORMAT = '', allMessages = [], messagesByWeek = {}, currentWeek = null, currentScript = "", 
+let PODCAST_FORMAT = '', allMessages = [], currentScript = "", 
     activeVoice = 'alex', host1Name = 'Host 1', host2Name = 'Host 2';
 
 // DOM Elements - simplified using an object literal
 const elements = {};
-['messagesFile','weekSelect','generateScript','generateAudio','messagesContent','scriptContent',
- 'audioContainer','podcastAudio','downloadLink','messageCount','userContext','alexVoiceSelect',
+['messagesFile','generateScript','generateAudio','messagesContent','scriptContent',
+ 'audioContainer','podcastAudio','downloadLink','userContext','alexVoiceSelect',
  'mayaVoiceSelect','editAlexBtn','editMayaBtn','activeVoiceLabel','voiceInstructions']
  .forEach(id => elements[id] = document.getElementById(id));
 
 // Event Listeners
 elements.messagesFile.addEventListener('change', handleFileUpload);
-elements.weekSelect.addEventListener('change', handleWeekChange);
 elements.generateScript.addEventListener('click', generatePodcastScript);
 elements.generateAudio.addEventListener('click', generatePodcastAudio);
 elements.alexVoiceSelect.addEventListener('change', handleAlexVoiceChange);
@@ -263,58 +264,11 @@ function processContent(content) {
         if (!message.time) message.time = message.dt.toISOString();
     });
     
-    messagesByWeek = groupByWeek(allMessages);
-    populateWeekSelect(Object.keys(messagesByWeek));
+    // Sort messages by date
+    allMessages.sort((a, b) => a.dt - b.dt);
     
-    elements.weekSelect.disabled = false;
-    elements.generateScript.disabled = false;
-}
-
-// Group messages by week - simplified
-function groupByWeek(messages) {
-    const groups = {};
-    messages.forEach(message => {
-        const dt = message.dt;
-        const dayOfWeek = dt.getDay();
-        const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-        const weekStart = new Date(dt);
-        weekStart.setDate(dt.getDate() - diff);
-        weekStart.setHours(0, 0, 0, 0);
-        const weekKey = weekStart.toISOString().split('T')[0];
-        groups[weekKey] = groups[weekKey] || [];
-        groups[weekKey].push(message);
-    });
-    return groups;
-}
-
-// UI helpers
-function populateWeekSelect(weeks) {
-    elements.weekSelect.innerHTML = '<option value="all">All Weeks</option>';
-    
-    weeks.sort().forEach(week => {
-        elements.weekSelect.innerHTML += `<option value="${week}">${formatDate(new Date(week))}</option>`;
-    });
-    
-    if (weeks.length > 0) {
-        elements.weekSelect.value = weeks[weeks.length - 1];
-        handleWeekChange();
-    }
-}
-
-function handleWeekChange() {
-    currentWeek = elements.weekSelect.value;
-    if (!currentWeek) {
-        elements.messagesContent.innerHTML = '';
-        elements.messageCount.innerHTML = '0';
-        return;
-    }
-    
-    const weekMessages = currentWeek === 'all' ? 
-        Object.values(messagesByWeek).flat() : 
-        messagesByWeek[currentWeek];
-    
-    elements.messageCount.innerHTML = weekMessages.length.toString();
-    const { replies, roots } = buildThreads(weekMessages);
+    // Update UI
+    const { replies, roots } = buildThreads(allMessages);
     
     elements.messagesContent.innerHTML = roots.length === 0 ? 
         '<div class="alert alert-info">No messages found.</div>' : '';
@@ -398,7 +352,7 @@ function renderMessageToText(message, repliesDict, level = 0) {
 }
 
 // Script generation
-function getSystemPrompt(weekFormatted) {
+function getSystemPrompt() {
     const alexVoice = elements.alexVoiceSelect.value || 'ash';
     const mayaVoice = elements.mayaVoiceSelect.value || 'nova';
     
@@ -412,7 +366,25 @@ function getSystemPrompt(weekFormatted) {
             `\n\nCustom voice instructions for ${host2Name}:\n${elements.voiceInstructions.value}` : ''
     ].join('');
 
-    return PODCAST_FORMAT.replace(/\$WEEK/g, currentWeek === 'all' ? 'all available weeks' : weekFormatted) + voiceInstructions;
+    // Get the date from the most recent message or use current date
+    let weekDate = new Date();
+    if (allMessages && allMessages.length > 0) {
+        // Sort messages by date (newest first) and get the date from the most recent message
+        const sortedMessages = [...allMessages].sort((a, b) => b.dt - a.dt);
+        if (sortedMessages[0] && sortedMessages[0].dt) {
+            weekDate = sortedMessages[0].dt;
+        }
+    }
+    
+    // Format the date as "Month Day, Year" (e.g., "May 16, 2025")
+    const formattedDate = weekDate.toLocaleDateString('en-US', { 
+        month: 'long', 
+        day: 'numeric', 
+        year: 'numeric' 
+    });
+    
+    // Replace $WEEK placeholder with the formatted date
+    return PODCAST_FORMAT.replace(/\$WEEK/g, formattedDate) + voiceInstructions;
 }
 
 // API helper
@@ -433,66 +405,69 @@ async function callOpenAI(endpoint, data) {
 }
 
 async function generatePodcastScript() {
-    if (!currentWeek) return;
-    
-    // Clear previous errors and add spinner
+    // Clear previous errors
     elements.scriptContent.parentElement.querySelectorAll('.spinner-container, .alert').forEach(el => el.remove());
-    const spinnerContainer = document.createElement('div');
-    spinnerContainer.className = 'spinner-container mb-2';
-    spinnerContainer.innerHTML = createSpinner('Generating script...');
-    elements.scriptContent.parentElement.insertBefore(spinnerContainer, elements.scriptContent);
     
     try {
-        const weekMessages = currentWeek === 'all' ? Object.values(messagesByWeek).flat() : messagesByWeek[currentWeek];
-        const weekFormatted = currentWeek === 'all' ? 'All Available Weeks' : formatDate(new Date(currentWeek));
-        
-        const { replies, roots } = buildThreads(weekMessages);
+        const { replies, roots } = buildThreads(allMessages);
         const messagesText = roots.map(root => renderMessageToText(root, replies, 0)).join('');
         
         try {
-            // Call API to generate script
-            const result = await callOpenAI('chat/completions', {
-                model: "gpt-4o-mini",
-                messages: [
-                    { role: "system", content: getSystemPrompt(weekFormatted) },
-                    { role: "user", content: messagesText }
-                ],
-                temperature: 0.7
-            });
+            // Use asyncLLM to stream the response
+            elements.scriptContent.value = ''; // Clear the textarea first
             
-            currentScript = result.choices[0].message.content;
+            for await (const { content } of asyncLLM(
+                "https://llmfoundry.straive.com/openai/v1/chat/completions", 
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({
+                        model: "gpt-4.1-mini",
+                        // Must enable streaming
+                        stream: true,
+                        messages: [
+                            { role: "system", content: getSystemPrompt() },
+                            { role: "user", content: messagesText }
+                        ]
+                    })
+                }
+            )) {
+                // Update the textarea with the current accumulated content
+                elements.scriptContent.value = content;
+                
+                // Auto-scroll to bottom
+                elements.scriptContent.scrollTop = elements.scriptContent.scrollHeight;
+            }
+            
+            // Save the final script
+            currentScript = elements.scriptContent.value;
         } catch (error) {
             console.error('Error with API:', error);
-            currentScript = generateSimpleScript(weekFormatted, weekMessages);
+            currentScript = generateSimpleScript();
         }
         
-        elements.scriptContent.value = currentScript;
         elements.generateAudio.disabled = false;
     } catch (error) {
         console.error('Error generating script:', error);
         elements.scriptContent.parentElement.insertAdjacentHTML('beforebegin', 
             `<div class="alert alert-danger mb-2">Error generating script: ${error.message}</div>`);
         generateSimpleScript();
-    } finally {
-        spinnerContainer.remove();
     }
 }
 
-function generateSimpleScript(weekFormatted = null, weekMessages = null) {
-    weekFormatted = weekFormatted || (currentWeek === 'all' ? 'All Available Weeks' : formatDate(new Date(currentWeek)));
-    weekMessages = weekMessages || (currentWeek === 'all' ? Object.values(messagesByWeek).flat() : messagesByWeek[currentWeek]);
-    
+function generateSimpleScript() {
     // Create a simple script template with top 3 authors
-    const authors = [...new Set(weekMessages.map(m => m.author))];
-    let script = `Host: Welcome to the weekly podcast ${currentWeek === 'all' ? 'covering all available weeks' : `for the week of ${weekFormatted}`}.\n\n` +
+    const authors = [...new Set(allMessages.map(m => m.author))];
+    let script = `Host: Welcome to the podcast.\n\n` +
                  `Host: Today we'll be discussing the key conversations from our community.\n\n`;
     
     authors.slice(0, 3).forEach(author => {
-        script += `Host: Let's hear from ${author} who contributed this week.\n\n` +
+        script += `Host: Let's hear from ${author} who contributed.\n\n` +
                  `Guest: ${author}'s insights were valuable, especially their points about technology trends.\n\n`;
     });
     
-    script += `Host: That's all for this week. Thanks for listening!\n`;
+    script += `Host: That's all for today. Thanks for listening!\n`;
     elements.scriptContent.value = script;
     elements.generateAudio.disabled = false;
     
@@ -503,7 +478,16 @@ function generateSimpleScript(weekFormatted = null, weekMessages = null) {
 async function generatePodcastAudio() {
     if (!currentScript) return;
     
-    elements.audioContainer.innerHTML = createSpinner('Generating audio...');
+    elements.audioContainer.innerHTML = `
+        ${createSpinner('Generating audio...')}
+        <div class="progress mt-3" style="height: 20px;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                 id="audioProgressBar" role="progressbar" 
+                 style="width: 0%;" 
+                 aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+        </div>
+        <div id="progressStatus" class="text-center mt-2">Preparing audio generation...</div>
+    `;
     elements.audioContainer.style.display = 'block';
     
     try {
@@ -529,21 +513,10 @@ async function generatePodcastAudio() {
         if (lines.length === 0) throw new Error('No valid lines found in script');
         
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const audioBlob = await generateAudioFromLines(lines, audioContext);
+        const audioBlob = await generateAudioFromLines(lines, audioContext, updateProgressUI);
         const audioUrl = URL.createObjectURL(audioBlob);
         
         updateAudioPlayer(audioUrl);
-        
-        // Process individual weeks if needed
-        if (currentWeek === 'all') {
-            const weekProgressElement = document.createElement('div');
-            weekProgressElement.className = 'progress-indicator mt-3 mb-3';
-            weekProgressElement.innerHTML = createSpinner('Processing individual weeks...');
-            document.getElementById('downloadLinksContainer').appendChild(weekProgressElement);
-            
-            await generateWeekAudios();
-            weekProgressElement.remove();
-        }
     } catch (error) {
         console.error('Error generating audio:', error);
         elements.audioContainer.innerHTML = `
@@ -555,11 +528,32 @@ async function generatePodcastAudio() {
     }
 }
 
-async function generateAudioFromLines(lines, audioContext) {
+// Progress UI update helper
+function updateProgressUI(current, total, statusText) {
+    const percent = Math.floor((current / total) * 100);
+    const progressBar = document.getElementById('audioProgressBar');
+    const progressStatus = document.getElementById('progressStatus');
+    
+    if (progressBar) {
+        progressBar.style.width = `${percent}%`;
+        progressBar.setAttribute('aria-valuenow', percent);
+        progressBar.textContent = `${percent}%`;
+    }
+    
+    if (progressStatus && statusText) {
+        progressStatus.textContent = statusText;
+    }
+}
+
+async function generateAudioFromLines(lines, audioContext, progressCallback) {
     const audioBuffers = [], errors = [];
     
-    for (const line of lines) {
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
         try {
+            // Update progress
+            progressCallback(i, lines.length, `Processing line ${i+1} of ${lines.length}: "${line.speaker}"`);
+            
             // Determine which voice to use based on the speaker
             const isHost1 = line.speaker.toLowerCase().includes('alex') || 
                         line.speaker.toLowerCase().includes(host1Name.toLowerCase());
@@ -592,6 +586,9 @@ async function generateAudioFromLines(lines, audioContext) {
             const arrayBuffer = await response.arrayBuffer();
             const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
             audioBuffers.push(audioBuffer);
+            
+            // Update progress after successful processing
+            progressCallback(i + 0.5, lines.length, `Processed line ${i+1} of ${lines.length}`);
         } catch (error) {
             console.error(`Error processing line: "${line.text.substring(0, 30)}..."`, error);
             errors.push(`Failed to process "${line.speaker}" line: ${error.message}`);
@@ -604,6 +601,9 @@ async function generateAudioFromLines(lines, audioContext) {
     
     if (audioBuffers.length === 0) throw new Error("Failed to generate any audio from the script");
     
+    // Update progress for final combining step
+    progressCallback(lines.length - 0.5, lines.length, "Combining audio segments...");
+    
     // Combine audio buffers
     const totalLength = audioBuffers.reduce((sum, buffer) => sum + buffer.length, 0);
     const result = audioContext.createBuffer(1, totalLength, audioContext.sampleRate);
@@ -614,6 +614,9 @@ async function generateAudioFromLines(lines, audioContext) {
         resultData.set(buffer.getChannelData(0), offset);
         offset += buffer.length;
     });
+    
+    // Final progress update
+    progressCallback(lines.length, lines.length, "Audio generation complete!");
     
     return createWavBlob(result);
 }
@@ -666,7 +669,7 @@ function updateAudioPlayer(audioUrl) {
         <h3>Generated Podcast</h3>
         <audio id="podcastAudio" controls class="w-100"></audio>
         <div class="mt-3" id="downloadLinksContainer">
-            <a href="${audioUrl}" class="btn btn-outline-primary" download="podcast_${currentWeek}.mp3">
+            <a href="${audioUrl}" class="btn btn-outline-primary" download="podcast.mp3">
                 Download Podcast
             </a>
         </div>
@@ -676,98 +679,6 @@ function updateAudioPlayer(audioUrl) {
     const podcastAudio = document.getElementById('podcastAudio');
     podcastAudio.src = audioUrl;
     podcastAudio.load(); // Force the audio to load
-}
-
-// Generate individual week audio files
-async function generateWeekAudios() {
-    if (currentWeek !== 'all') return;
-    
-    const downloadLinksContainer = document.getElementById('downloadLinksContainer');
-    const weeks = Object.keys(messagesByWeek).sort();
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    
-    // Create status indicators for all weeks
-    const weekStatusElements = {};
-    weeks.forEach(week => {
-        const weekFormatted = formatDate(new Date(week));
-        const statusElement = document.createElement('div');
-        statusElement.className = 'week-status me-2 mb-2 d-inline-block';
-        statusElement.innerHTML = `
-            <div class="spinner-border spinner-border-sm text-primary" role="status">
-                <span class="visually-hidden">Processing ${weekFormatted}...</span>
-            </div>
-            <span class="ms-1">${weekFormatted}</span>
-        `;
-        downloadLinksContainer.appendChild(statusElement);
-        weekStatusElements[week] = statusElement;
-    });
-    
-    for (const week of weeks) {
-        try {
-            const weekFormatted = formatDate(new Date(week));
-            const weekMessages = messagesByWeek[week];
-            const { replies, roots } = buildThreads(weekMessages);
-            const messagesText = roots.map(root => renderMessageToText(root, replies, 0)).join('');
-            
-            // Generate script for this week
-            let weekScript;
-            try {
-                const result = await callOpenAI('chat/completions', {
-                    model: "gpt-4o-mini",
-                    messages: [
-                        { role: "system", content: getSystemPrompt(weekFormatted) },
-                        { role: "user", content: messagesText }
-                    ],
-                    temperature: 0.7
-                });
-                weekScript = result.choices[0].message.content;
-            } catch (error) {
-                console.error(`Error with API for week ${week}:`, error);
-                weekScript = generateSimpleScript(weekFormatted, weekMessages);
-            }
-            
-            // Process script for audio
-            const sanitizedScript = weekScript
-                .replace(/\*\*/g, '')
-                .replace(/^---+$/gm, 'SECTION_BREAK: Transitioning to next section')
-                .replace(/\[([^\]]+)\]/g, 'SOUND_EFFECT: $1');
-            
-            const lines = sanitizedScript
-                .split('\n')
-                .filter(line => line.trim())
-                .map(line => {
-                    if (line.includes(':')) {
-                        const [speaker, ...textParts] = line.split(':');
-                        return { speaker: speaker.trim(), text: textParts.join(':').trim() };
-                    }
-                    return { speaker: 'Narrator', text: line.trim() };
-                })
-                .filter(line => line.text);
-            
-            // Generate audio
-            const audioBlob = await generateAudioFromLines(lines, audioContext);
-            const weekAudioUrl = URL.createObjectURL(audioBlob);
-            
-            // Update UI with download link
-            if (weekStatusElements[week]) {
-                weekStatusElements[week].outerHTML = `
-                    <a href="${weekAudioUrl}" class="btn btn-outline-primary me-2 mb-2" download="podcast_${week}.mp3">
-                        Download ${weekFormatted}
-                    </a>
-                `;
-            }
-        } catch (error) {
-            console.error(`Error generating audio for week ${week}:`, error);
-            // Show error in UI
-            if (weekStatusElements[week]) {
-                weekStatusElements[week].outerHTML = `
-                    <div class="alert alert-warning me-2 mb-2 d-inline-block">
-                        Failed to generate audio for ${formatDate(new Date(week))}
-                    </div>
-                `;
-            }
-        }
-    }
 }
 
 // Load voice config from config.toml
