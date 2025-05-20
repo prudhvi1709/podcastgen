@@ -1,6 +1,6 @@
 # Browser Podcast Generator
 
-A sophisticated web application that transforms various document formats into engaging podcasts directly in your browser. Built with modern web technologies and powered by LLM Foundry's AI capabilities.
+A web application that transforms document conversations into engaging podcasts directly in your browser. Built with modern web technologies and powered by OpenAI's API capabilities through LLM Foundry.
 
 ## 🌟 Features
 
@@ -12,48 +12,42 @@ A sophisticated web application that transforms various document formats into en
     - TXT: Plain text content
   - User-provided context input
   - Intelligent content threading and organization
-  - Week-based content filtering and grouping
   - Dynamic content rendering with batch processing
 
 - **AI-Powered Script Generation**
-  - Intelligent script creation using LLM Foundry's GPT-4o-mini model
+  - Intelligent script creation using LLMs
   - Contextual understanding of document content
   - Professional podcast format with host interactions
-  - Automatic topic segmentation and transitions
   - Support for multiple speakers and narrative styles
   - Customizable podcast format template
-  - Week-specific or all-weeks content processing
+  - Real-time streaming response
 
 - **High-Quality Audio Generation**
-  - Text-to-speech conversion using LLM Foundry's GPT-4o-mini-tts model
-  - Multiple voice support with customizable characteristics:
+  - Text-to-speech conversion using GPT-4o-mini-tts model
+  - Multiple voice options:
     - ash: Default voice for Host 1
     - nova: Default voice for Host 2
     - alloy, echo, fable, onyx, shimmer: Additional voice options
   - Custom voice instructions per speaker
-  - Professional audio processing and mixing
-  - WAV format output with high-quality encoding
-  - Fallback audio generation for offline use
+  - Professional audio processing
+  - WAV format output
+  - Progress tracking during generation
 
 - **User Interface**
   - Clean, responsive Bootstrap-based design
-  - Dark/light theme support
-  - Real-time progress indicators
   - Interactive content visualization
   - Downloadable podcast files
   - Voice configuration interface
-  - Week selection and filtering
   - Custom voice instruction editor
 
 ## 🚀 Getting Started
 
-1. Clone the repository
-2. Open `index.html` in a modern web browser
-3. Upload your document (JSON, PDF, DOCX, or TXT)
-4. Add optional context information
-5. Configure voice settings for hosts
-6. Select the desired week or all weeks
-7. Generate and download your podcast
+1. Open the application in a modern web browser
+2. Upload your document (JSON, PDF, DOCX, or TXT)
+3. Add optional context information
+4. Configure voice settings for hosts
+5. Generate script from your content
+6. Generate and download your podcast audio
 
 ## 📋 Supported File Formats
 
@@ -88,53 +82,44 @@ A sophisticated web application that transforms various document formats into en
 
 ### Frontend Technologies
 - Pure JavaScript for message processing
-- Bootstrap 5.3.3 for responsive UI
+- Bootstrap for responsive UI
 - Web Audio API for audio processing
 - Dynamic rendering for performance
-- Dark theme support via Gramex UI
 
 ### AI Integration
 - LLM Foundry API for script generation
-- GPT-4o-mini model for content creation
+- GPT-4.1-mini model for content creation
 - GPT-4o-mini-tts model for voice synthesis
-- Browser-based authentication
-- Fallback mechanisms for offline use
+- asyncLLM for streaming responses
+- Fallback mechanisms for error handling
 
 ### Audio Processing
 - Web Audio API for audio manipulation
 - WAV format encoding
 - Multi-channel audio support
-- Batch processing for large files
-- Fallback tone generation
+- Batch processing for large content
+- Progress tracking and visual feedback
 
 ### Voice Configuration
 - TOML-based configuration file
 - Custom voice instructions per speaker
 - Multiple voice options
-- Real-time voice preview
 - Voice characteristic customization
+- Switching between different host voices
 
 ## 🔒 Security
 
 - Browser-based authentication with LLM Foundry
-- No API keys stored in code
-- Secure credential handling
 - Client-side processing
+- Secure API interactions
 
 ## 🎯 Future Enhancements
 
 - Custom podcast templates
 - Multiple audio format support
-- API usage tracking
-- Intermediate file saving
-- ID3 tag support
 - Background music support
 - Voice preview functionality
 - Batch processing improvements
-
-## 👥 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📄 License
 
